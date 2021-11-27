@@ -21,6 +21,7 @@ OBJS = \
 	swtch.o\
 	syscall.o\
 	sysfile.o\
+	sysmem.o\
 	sysproc.o\
 	trapasm.o\
 	trap.o\
@@ -143,7 +144,9 @@ tags: $(OBJS) entryother.S _init
 vectors.S: vectors.pl
 	./vectors.pl > vectors.S
 
-ULIB = ulib.o usys.o printf.o umalloc.o
+ULIB = ulib.o usys.o printf.o umalloc.o 
+#fs.o console.o bio.o log.o spinlock.o $(OBJS)
+#fs
 
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
@@ -167,10 +170,15 @@ mkfs: mkfs.c fs.h
 
 UPROGS=\
 	_cat\
+	_compareWalkers\
+	_directoryWalker\
 	_echo\
+	_eraseInodeInfo\
+	_fixDamagedFS\
 	_forktest\
 	_grep\
 	_init\
+	_inodeTBWalker\
 	_kill\
 	_ln\
 	_ls\
@@ -181,6 +189,10 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_memtest\
+	_memtest2\
+	_automemtest\
+	_automemtestdealloc\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
