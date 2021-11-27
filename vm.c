@@ -7,8 +7,10 @@
 #include "proc.h"
 #include "elf.h"
 
+
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
+void procCleanup(int pid);
 
 // Set up CPU's kernel segment descriptors.
 // Run once on entry on each CPU.
@@ -32,7 +34,8 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
-static pte_t *
+//static
+pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
@@ -57,7 +60,9 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
-static int
+
+//static
+int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
@@ -129,7 +134,8 @@ setupkvm(void)
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
                 (uint)k->phys_start, k->perm) < 0) {
-      freevm(pgdir);
+                  cprintf("vm in if mappages");
+      freevm(pgdir, myproc() -> pid);
       return 0;
     }
   return pgdir;
@@ -271,7 +277,9 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       if(pa == 0)
         panic("kfree");
       char *v = P2V(pa);
-      kfree(v);
+      if((*pte & PTE_S) == 0){
+        kfree(v);
+      } 
       *pte = 0;
     }
   }
@@ -281,10 +289,10 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 // Free a page table and all the physical memory pages
 // in the user part.
 void
-freevm(pde_t *pgdir)
+freevm(pde_t *pgdir, int pid)
 {
   uint i;
-
+  procCleanup(pid);
   if(pgdir == 0)
     panic("freevm: no pgdir");
   deallocuvm(pgdir, KERNBASE, 0);
@@ -320,6 +328,8 @@ copyuvm(pde_t *pgdir, uint sz)
   uint pa, i, flags;
   char *mem;
 
+   
+
   if((d = setupkvm()) == 0)
     return 0;
   for(i = 0; i < sz; i += PGSIZE){
@@ -340,7 +350,8 @@ copyuvm(pde_t *pgdir, uint sz)
   return d;
 
 bad:
-  freevm(d);
+  cprintf("vm in bad");
+  freevm(d, myproc() -> pid);
   return 0;
 }
 

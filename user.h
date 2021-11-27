@@ -1,5 +1,9 @@
+#include "types.h"
+
 struct stat;
 struct rtcdate;
+struct superblock;
+
 
 // system calls
 int fork(void);
@@ -23,6 +27,13 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int countTrap(void);
+void* getSharedPage(int, int);
+int freeSharedPage(int);
+struct buf* callBRead(uint, uint, void*);
+int callSBRead(int, struct superblock*);
+int seek(int, int);
+struct buf* callBWrite(uint, uint, void*);
 
 // ulib.c
 int stat(const char*, struct stat*);
