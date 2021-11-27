@@ -20,3 +20,10 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+#define SYS_countTrap 22
+#define SYS_getSharedPage 23
+#define SYS_freeSharedPage 24
+#define SYS_callBRead 25
+#define SYS_callSBRead 26
+#define SYS_seek 27
+#define SYS_callBWrite 28

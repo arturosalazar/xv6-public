@@ -35,6 +35,26 @@ argfd(int n, int *pfd, struct file **pf)
   return 0;
 }
 
+int sys_seek(void){
+  int position;
+  struct file *fileptr;
+
+  if(argfd(0, 0, &fileptr) < 0){
+    return -1;
+  }
+
+  if(argint(1, &position) < 0){
+    return -1;
+  }
+
+  fileptr->off = position;
+
+  cprintf("SEEK POSITION-- %d\n", fileptr->off);
+
+  return 0;
+}
+
+
 // Allocate a file descriptor for the given file.
 // Takes over file reference from caller on success.
 static int
@@ -87,7 +107,12 @@ sys_write(void)
 
   if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0)
     return -1;
-  return filewrite(f, p, n);
+
+  //cprintf( "SYSWRITE AFTER POSITION %d\n", f->off);
+  int a = filewrite(f, p, n);
+  //cprintf("AFTER FILEWRITE POSITION %d\n\n", f->off);
+
+  return a;
 }
 
 int
@@ -308,6 +333,7 @@ sys_open(void)
     }
     ilock(ip);
     if(ip->type == T_DIR && omode != O_RDONLY){
+      //cprintf("SYSOPEN WRITEABLE");
       iunlockput(ip);
       end_op();
       return -1;
@@ -329,6 +355,7 @@ sys_open(void)
   f->off = 0;
   f->readable = !(omode & O_WRONLY);
   f->writable = (omode & O_WRONLY) || (omode & O_RDWR);
+  
   return fd;
 }
 

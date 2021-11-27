@@ -289,7 +289,8 @@ wait(void)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        //cprintf("proc after stack");
+        freevm(p->pgdir, pid);
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;

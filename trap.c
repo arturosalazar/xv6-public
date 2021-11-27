@@ -14,6 +14,9 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
+int countTrap = 0;
+int trapValCounters[256] = {0};
+int unkownTrap = 0;
 void
 tvinit(void)
 {
@@ -45,6 +48,9 @@ trap(struct trapframe *tf)
       exit();
     return;
   }
+
+  trapValCounters[tf->trapno]++;
+  countTrap++;
 
   switch(tf->trapno){
   case T_IRQ0 + IRQ_TIMER:
@@ -80,6 +86,7 @@ trap(struct trapframe *tf)
 
   //PAGEBREAK: 13
   default:
+    unkownTrap++;
     if(myproc() == 0 || (tf->cs&3) == 0){
       // In kernel, it must be our mistake.
       cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
